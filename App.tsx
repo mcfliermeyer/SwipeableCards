@@ -6,6 +6,7 @@ import {
   View,
   Image,
   Animated,
+  PanResponder,
 } from "react-native";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -19,18 +20,18 @@ export default function App() {
     { id: "4", uri: require("./assets/4.jpg") },
     { id: "5", uri: require("./assets/5.jpg") },
   ];
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ height: 60 }}></View>
-      <View style={{ flex: 1 }}>
+
+  const renderFoods = () => {
+    return Foods.map((item, i) => {
+      return (
         <Animated.View
-          style={[
-            {
-              height: SCREEN_HEIGHT - 120,
-              width: SCREEN_WIDTH,
-              padding: 10,
-            },
-          ]}
+          key={i}
+          style={{
+            height: SCREEN_HEIGHT - 120,
+            width: SCREEN_WIDTH,
+            padding: 10,
+            position: "absolute",
+          }}
         >
           <Image
             style={{
@@ -40,10 +41,16 @@ export default function App() {
               resizeMode: "cover",
               borderRadius: 20,
             }}
-            source={Foods[0].uri}
+            source={item.uri}
           />
         </Animated.View>
-      </View>
+      );
+    });
+  };
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ height: 60 }}></View>
+      <View style={{ flex: 1 }}>{renderFoods()}</View>
       <View style={{ height: 60 }}></View>
     </View>
   );
