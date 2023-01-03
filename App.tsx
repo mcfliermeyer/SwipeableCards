@@ -1,29 +1,23 @@
-import { disableErrorHandling } from "expo";
-import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  Animated,
-  PanResponder,
-} from "react-native";
+import { useState } from "react";
+import { Dimensions, View, Image, Animated, PanResponder } from "react-native";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const SCREEN_WIDTH = Dimensions.get("window").width;
+let data = [
+  { id: "1", uri: require("./assets/1.jpg") },
+  { id: "2", uri: require("./assets/2.jpg") },
+  { id: "3", uri: require("./assets/3.jpg") },
+];
 
 type CardProps = {
   item: { id: string; uri: any };
-  moveCard: (id: string) => void;
-  swipedDirection: (direction: string) => void;
+  moveAnyCardToBottom: (id: string) => void;
 };
 
-const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
-  const [yPosition, setYPosition] = useState(new Animated.Value(0));
-  let swipeDirection = "";
+const SwipeableCard = ({ item, moveAnyCardToBottom }: CardProps) => {
+  const [yPosition, _] = useState(new Animated.Value(0));
   const rotateCard = yPosition.interpolate({
+    //gives card slight rotation when swiping
     inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
     outputRange: ["-10deg", "0deg", "10deg"],
     extrapolate: "clamp",
@@ -33,23 +27,8 @@ const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
     onMoveShouldSetPanResponder: () => true,
     onStartShouldSetPanResponderCapture: () => false,
     onMoveShouldSetPanResponderCapture: () => true,
-    // onPanResponderGrant: () => {
-    //   pan.setOffset({
-    //     x: pan.x._value,
-    //     y: pan.y._value,
-    //   });
-    // },
     onPanResponderMove: (_, gestureState) => {
       yPosition.setValue(gestureState.dy);
-      if (gestureState.dy < -SCREEN_HEIGHT / 2 + 200) {
-        swipeDirection = "Up";
-        //swipe up
-      } else if (gestureState.dy > SCREEN_HEIGHT / 2 - 200) {
-        swipeDirection = "Down";
-        //swipe down
-      } else {
-        swipeDirection = "--";
-      }
     },
     onPanResponderRelease: (_, gestureState) => {
       if (
@@ -57,6 +36,7 @@ const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
         gestureState.dy > -SCREEN_HEIGHT / 2 + 200 &&
         gestureState.dy < SCREEN_HEIGHT / 2 - 200
       ) {
+        //animates card back to center
         Animated.spring(yPosition, {
           toValue: 0,
           speed: 5,
@@ -79,12 +59,13 @@ const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
             useNativeDriver: false,
           }).start();
         }
-        swipedDirection(swipeDirection);
-        moveCard(item.id);
+        moveAnyCardToBottom(item.id); //moves card to front of array and bottom of deck
+
         Animated.spring(yPosition, {
+          //animate the card that was just moved to bottom center of deck
           toValue: 0,
-          speed: 5,
-          bounciness: 5,
+          speed: 3,
+          bounciness: 12,
           useNativeDriver: false,
         }).start();
       }
@@ -116,56 +97,37 @@ const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
 };
 
 export default function App() {
-  const [cardArray, setCardArray] = useState(foods);
-  const [swipeDirection, setSwipeDirection] = useState("--");
+  const [cardArray, setCardArray] = useState(data);
 
-  const moveCard = (id: string) => {//move card from back to front of array using unshift
+  const moveAnyCardToBottom = (id: string) => {
+    //move card from anywhere in deck to front of array using unshift
     //first card to display is last in array
-    let cardsCopy = [...cardArray]
-    const cardToMove = cardsCopy.find((card) => card.id == id);
-    cardsCopy.splice(cardsCopy.findIndex((card) => card.id == id));
-    cardsCopy.unshift(cardToMove!);
-    setCardArray(() => cardsCopy);
+    let cardsCopy = [...cardArray]; //shallow copy of array to mutate
+    const cardToMove = cardsCopy.find((card) => card.id == id); //locate card with id
+    cardsCopy.splice(cardsCopy.findIndex((card) => card.id == id)); //remove just that card
+    cardsCopy.unshift(cardToMove!); //put card in array front which is bottom of the deck
+    setCardArray(() => cardsCopy); //change state for re-render
   };
-
-  // replaceTopCard(cardArray)
-
   //create stacked cards that will be able to drag around from top
-  const renderFoods = () => {
+  const renderCardsFromData = () => {
     return cardArray.map((item, i) => {
       return (
         <SwipeableCard
           key={item.id}
           item={item}
-          moveCard={() => moveCard(item.id)}
-          swipedDirection={() => swipeDirection}
+          moveAnyCardToBottom={() => moveAnyCardToBottom(item.id)}
+          // swipedDirection={() => swipeDirection}
         />
       );
     });
   };
 
-  //actual view
+  //App Views
   return (
     <View style={{ flex: 1 }}>
       <View style={{ height: 60 }}></View>
-      <View style={{ flex: 1 }}>{renderFoods()}</View>
+      <View style={{ flex: 1 }}>{renderCardsFromData()}</View>
       <View style={{ height: 60 }}></View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-let foods = [
-  { id: "1", uri: require("./assets/1.jpg") },
-  { id: "2", uri: require("./assets/2.jpg") },
-  { id: "3", uri: require("./assets/3.jpg") },
-  // { id: "4", uri: require("./assets/4.jpg") },
-  // { id: "5", uri: require("./assets/5.jpg") },
-];
