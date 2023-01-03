@@ -81,6 +81,12 @@ const SwipeableCard = ({ item, moveCard, swipedDirection }: CardProps) => {
         }
         swipedDirection(swipeDirection);
         moveCard(item.id);
+        Animated.spring(yPosition, {
+          toValue: 0,
+          speed: 5,
+          bounciness: 5,
+          useNativeDriver: false,
+        }).start();
       }
     },
   });
@@ -113,10 +119,13 @@ export default function App() {
   const [cardArray, setCardArray] = useState(foods);
   const [swipeDirection, setSwipeDirection] = useState("--");
 
-  const moveCard = (id: string) => {
-    const lastCard = cardArray.pop()!;
-    cardArray.unshift(lastCard);
-    setCardArray(cardArray);
+  const moveCard = (id: string) => {//move card from back to front of array using unshift
+    //first card to display is last in array
+    let cardsCopy = [...cardArray]
+    const cardToMove = cardsCopy.find((card) => card.id == id);
+    cardsCopy.splice(cardsCopy.findIndex((card) => card.id == id));
+    cardsCopy.unshift(cardToMove!);
+    setCardArray(() => cardsCopy);
   };
 
   // replaceTopCard(cardArray)
