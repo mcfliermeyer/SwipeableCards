@@ -17,6 +17,17 @@ type CardProps = {
 
 const SwipeableCard = ({ item, moveAnyCardToBottom, index }: CardProps) => {
   const yPosition = useRef(new Animated.Value(0)).current;
+  const cardDeckOffset = useRef(0);
+  const BASE = -35
+
+  useEffect(() => {
+    cardDeckOffset.current = BASE + (9 * (index)) + index * 8
+    Animated.spring(yPosition, {
+      toValue: cardDeckOffset.current,
+      speed: 5,
+      useNativeDriver: false,
+    }).start();
+  })
 
   const rotateCard = yPosition.interpolate({
     //gives card slight rotation when swiping
@@ -24,17 +35,7 @@ const SwipeableCard = ({ item, moveAnyCardToBottom, index }: CardProps) => {
     outputRange: ["-10deg", "0deg", "10deg"],
     extrapolate: "clamp",
   });
-  let offset = 0;
-  if (index == 0) offset -= 35;
-  else if (index == 1) offset -= 18;
-  const offsetAnimation = () => {
-    Animated.spring(yPosition, {
-      toValue: offset,
-      speed: 5,
-      useNativeDriver: false,
-    }).start();
-  };
-  offsetAnimation()
+  
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: () => true,
